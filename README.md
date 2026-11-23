@@ -2,7 +2,7 @@
 
 A small web app that loads any Codeforces handle and shows the profile, rating graph, tag analysis and solved problems.
 
-**Live demo:** _add your GitHub Pages link here_
+**Live demo:** https://ifaz120.github.io/cf-analyzer/
 
 **Screenshot:** _add a screenshot here_
 
