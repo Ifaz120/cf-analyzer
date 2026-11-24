@@ -1,5 +1,3 @@
-// Functions that build the DOM. Text from the API is always set with textContent.
-
 const statusBox = document.querySelector("#status");
 const resultsBox = document.querySelector("#results");
 const profileBox = document.querySelector("#profile");
@@ -10,7 +8,6 @@ const savedList = document.querySelector("#saved-list");
 const bookmarkList = document.querySelector("#bookmark-list");
 const tagSelect = document.querySelector("#filter-tag");
 
-// Official Codeforces rank colors
 const RANK_COLORS = {
   newbie: "#808080",
   pupil: "#008000",
@@ -24,7 +21,6 @@ const RANK_COLORS = {
   "legendary grandmaster": "#ff0000",
 };
 
-// Creates an element with optional classes and text (text is set safely with textContent).
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
   if (className) {
@@ -36,12 +32,10 @@ function makeElement(tag, className, text) {
   return element;
 }
 
-// Returns the color for a rank name (gray if the user is unrated).
 function getRankColor(rank) {
   return RANK_COLORS[rank] || "#808080";
 }
 
-// Returns the Codeforces rank color that matches a rating number (gray if unrated).
 function getRatingColor(rating) {
   if (!rating || rating < 1200) return "#808080";
   if (rating < 1400) return "#008000";
@@ -52,22 +46,16 @@ function getRatingColor(rating) {
   return "#ff0000";
 }
 
-// Mixes a color with the page text color so it stays readable in both light and dark themes.
 function readableText(color) {
   return `color-mix(in srgb, ${color} 80%, var(--color-base-content))`;
 }
 
-// Makes a soft see-through version of a color for badge backgrounds.
 function tint(color) {
   return `color-mix(in srgb, ${color} 15%, transparent)`;
 }
 
-// ---------- Loading / error / results visibility ----------
-
-// Shows skeleton placeholders while data is loading.
 export function showLoading() {
   statusBox.replaceChildren();
-  // Blocks shaped like the profile card, the charts and the problem list
   const heights = ["h-52", "h-64", "h-40"];
   heights.forEach((height) => {
     statusBox.append(makeElement("div", `skeleton ${height} w-full mb-4`));
@@ -75,7 +63,6 @@ export function showLoading() {
   resultsBox.classList.add("hidden");
 }
 
-// Shows an error alert with a message.
 export function showError(message) {
   statusBox.replaceChildren();
   const alert = makeElement("div", "alert alert-error");
@@ -85,15 +72,11 @@ export function showError(message) {
   resultsBox.classList.add("hidden");
 }
 
-// Clears the loading skeletons / error message and shows the results area.
 export function showResults() {
   statusBox.replaceChildren();
   resultsBox.classList.remove("hidden");
 }
 
-// ---------- Profile ----------
-
-// Builds one stat block for the DaisyUI stats component (value can have its own color).
 function makeStat(title, value, color) {
   const stat = makeElement("div", "stat");
   stat.append(makeElement("div", "stat-title text-xs uppercase tracking-wider", title));
@@ -105,7 +88,6 @@ function makeStat(title, value, color) {
   return stat;
 }
 
-// Builds the profile card (avatar, handle, rank, country, organization, stats, Save button).
 export function renderProfile(user, solvedCount, isSaved) {
   const rank = user.rank || "unrated";
   const color = getRankColor(user.rank);
@@ -113,12 +95,10 @@ export function renderProfile(user, solvedCount, isSaved) {
   const card = makeElement("div", "card bg-base-100 shadow-sm border border-base-300");
   const body = makeElement("div", "card-body gap-6 p-6 sm:p-8");
 
-  // Top row: avatar with a rank-colored ring + names
   const top = makeElement("div", "flex items-center gap-5 flex-wrap");
   const avatar = makeElement("img", "w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover");
   avatar.style.outline = `3px solid ${color}`;
   avatar.style.outlineOffset = "3px";
-  // The API sometimes gives links starting with "//", so add https:
   avatar.src = user.titlePhoto.startsWith("//") ? `https:${user.titlePhoto}` : user.titlePhoto;
   avatar.alt = `${user.handle} avatar`;
   top.append(avatar);
@@ -135,14 +115,12 @@ export function renderProfile(user, solvedCount, isSaved) {
   top.append(names);
   body.append(top);
 
-  // Stats row
   const stats = makeElement("div", "stats stats-vertical sm:stats-horizontal w-full bg-base-200/60");
   stats.append(makeStat("Current Rating", user.rating ?? "Unrated", getRatingColor(user.rating)));
   stats.append(makeStat("Max Rating", user.maxRating ?? "Unrated", getRatingColor(user.maxRating)));
   stats.append(makeStat("Problems Solved", solvedCount));
   body.append(stats);
 
-  // Save button
   const actions = makeElement("div", "card-actions");
   const saveBtn = makeElement("button");
   saveBtn.id = "save-btn";
@@ -154,7 +132,6 @@ export function renderProfile(user, solvedCount, isSaved) {
   updateSaveButton(isSaved);
 }
 
-// Updates the Save button text and disables it if the handle is already saved.
 export function updateSaveButton(isSaved) {
   const saveBtn = document.querySelector("#save-btn");
   if (!saveBtn) {
@@ -165,11 +142,7 @@ export function updateSaveButton(isSaved) {
   saveBtn.disabled = isSaved;
 }
 
-// ---------- Filters ----------
-
-// Fills the tag select with every tag found in the solved problems (plus "All tags").
 export function populateTagSelect(problems) {
-  // flatMap joins all tag arrays into one, Set removes duplicates, sort puts them in order
   const tags = [...new Set(problems.flatMap((problem) => problem.tags))].sort();
 
   tagSelect.replaceChildren();
@@ -184,7 +157,6 @@ export function populateTagSelect(problems) {
   });
 }
 
-// Puts all filter and sort controls back to their default values.
 export function resetFilterInputs() {
   document.querySelector("#filter-name").value = "";
   document.querySelector("#filter-tag").value = "";
@@ -193,15 +165,11 @@ export function resetFilterInputs() {
   document.querySelector("#filter-sort").value = "newest";
 }
 
-// ---------- Problems ----------
-
-// Sets a bookmark button to look "bookmarked" or "not bookmarked".
 export function setBookmarkButton(button, isBookmarked) {
   button.className = `btn btn-sm rounded-full ${isBookmarked ? "btn-warning" : "btn-ghost bg-base-200"}`;
   button.textContent = isBookmarked ? "★ Bookmarked" : "☆ Solve later";
 }
 
-// Builds one problem card (name, rating badge, tag badges, link, bookmark button).
 function makeProblemCard(problem, isBookmarked) {
   const card = makeElement(
     "div",
@@ -211,7 +179,6 @@ function makeProblemCard(problem, isBookmarked) {
 
   body.append(makeElement("h3", "font-semibold leading-snug tracking-tight", problem.name));
 
-  // Rating badge uses the Codeforces color for that rating
   const badges = makeElement("div", "flex flex-wrap gap-1.5");
   const ratingColor = getRatingColor(problem.rating);
   const ratingBadge = makeElement(
@@ -245,12 +212,10 @@ function makeProblemCard(problem, isBookmarked) {
   return card;
 }
 
-// Shows the visible problems, the "Showing X of Y" text, and the empty states.
 export function renderProblems(visibleProblems, totalCount, bookmarkedIds, shownCount) {
   problemList.replaceChildren();
   countText.textContent = `Showing ${visibleProblems.length} of ${totalCount}`;
 
-  // Empty state 1: the user has not solved anything
   if (totalCount === 0) {
     filtersBox.classList.add("hidden");
     const empty = makeElement("div", "alert");
@@ -260,7 +225,6 @@ export function renderProblems(visibleProblems, totalCount, bookmarkedIds, shown
   }
   filtersBox.classList.remove("hidden");
 
-  // Empty state 2: filters hide everything
   if (visibleProblems.length === 0) {
     const empty = makeElement("div", "alert flex-wrap");
     empty.append(makeElement("span", "", "No problems match your filters."));
@@ -271,7 +235,6 @@ export function renderProblems(visibleProblems, totalCount, bookmarkedIds, shown
     return;
   }
 
-  // Only draw the first "shownCount" cards so the page stays light and tidy
   const pageOfProblems = visibleProblems.slice(0, shownCount);
   const grid = makeElement("div", "grid grid-cols-1 md:grid-cols-2 gap-4");
   pageOfProblems.forEach((problem) => {
@@ -279,7 +242,6 @@ export function renderProblems(visibleProblems, totalCount, bookmarkedIds, shown
   });
   problemList.append(grid);
 
-  // "Show more" button while some matching problems are still hidden
   const remaining = visibleProblems.length - pageOfProblems.length;
   if (remaining > 0) {
     const moreBox = makeElement("div", "flex justify-center mt-6");
@@ -290,13 +252,9 @@ export function renderProblems(visibleProblems, totalCount, bookmarkedIds, shown
   }
 }
 
-// ---------- Sidebar lists ----------
-
-// Builds the sidebar list of saved handles (each has a load button and a × remove button).
 export function renderSavedHandles(handles) {
   savedList.replaceChildren();
 
-  // Empty state
   if (handles.length === 0) {
     savedList.append(makeElement("li", "text-sm opacity-60 py-1", "No saved handles yet."));
     return;
@@ -319,11 +277,9 @@ export function renderSavedHandles(handles) {
   });
 }
 
-// Builds the sidebar list of bookmarked problems (each has a link and a × remove button).
 export function renderBookmarks(bookmarks) {
   bookmarkList.replaceChildren();
 
-  // Empty state
   if (bookmarks.length === 0) {
     bookmarkList.append(makeElement("li", "text-sm opacity-60 py-1", "No bookmarks yet."));
     return;

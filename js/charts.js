@@ -3,30 +3,25 @@
 let ratingChart = null;
 let tagChart = null;
 
-// The last data drawn, kept so the charts can be redrawn when the theme changes
 let lastHistory = null;
 let lastProblems = null;
 
-// Sets chart text, grid and font so they match the current theme.
 function applyThemeDefaults(canvas) {
-  Chart.defaults.color = getComputedStyle(canvas).color; // follows the page text color
-  Chart.defaults.borderColor = "rgba(128, 128, 128, 0.2)"; // soft grid lines in both themes
+  Chart.defaults.color = getComputedStyle(canvas).color;
+  Chart.defaults.borderColor = "rgba(128, 128, 128, 0.2)";
   Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 }
 
-// Draws the rating line chart, or shows a message if the user has no rated contests.
 export function drawRatingChart(history) {
   const canvas = document.querySelector("#rating-chart");
   const message = document.querySelector("#rating-empty");
   lastHistory = history;
 
-  // Destroy the old chart first, otherwise Chart.js cannot reuse the canvas
   if (ratingChart) {
     ratingChart.destroy();
     ratingChart = null;
   }
 
-  // Empty state
   if (history.length === 0) {
     canvas.classList.add("hidden");
     message.classList.remove("hidden");
@@ -36,7 +31,6 @@ export function drawRatingChart(history) {
   message.classList.add("hidden");
   applyThemeDefaults(canvas);
 
-  // Build chart data: x-axis = contest date as text, y-axis = rating after the contest
   const labels = history.map((contest) =>
     new Date(contest.ratingUpdateTimeSeconds * 1000).toLocaleDateString()
   );
@@ -55,19 +49,18 @@ export function drawRatingChart(history) {
           borderWidth: 2.5,
           fill: true,
           tension: 0.3,
-          pointRadius: 0, // clean line, points only appear on hover
+          pointRadius: 0,
           pointHoverRadius: 5,
         },
       ],
     },
     options: {
-      maintainAspectRatio: false, // fill the fixed-height box around the canvas
-      scales: { x: { ticks: { maxTicksLimit: 8, maxRotation: 0 } } }, // fewer, flat date labels
+      maintainAspectRatio: false,
+      scales: { x: { ticks: { maxTicksLimit: 8, maxRotation: 0 } } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            // Tooltip title = contest name, body = rating
             title: (items) => history[items[0].dataIndex].contestName,
             label: (item) => `Rating: ${item.parsed.y}`,
           },
@@ -77,7 +70,6 @@ export function drawRatingChart(history) {
   });
 }
 
-// Draws the bar chart of the 10 most common tags among solved problems.
 export function drawTagChart(problems) {
   const canvas = document.querySelector("#tag-chart");
   const message = document.querySelector("#tag-empty");
@@ -88,7 +80,6 @@ export function drawTagChart(problems) {
     tagChart = null;
   }
 
-  // Empty state
   if (problems.length === 0) {
     canvas.classList.add("hidden");
     message.classList.remove("hidden");
@@ -98,7 +89,6 @@ export function drawTagChart(problems) {
   message.classList.add("hidden");
   applyThemeDefaults(canvas);
 
-  // Count problems per tag with reduce, e.g. { dp: 40, greedy: 55 }
   const counts = problems.reduce((totals, problem) => {
     problem.tags.forEach((tag) => {
       totals[tag] = (totals[tag] || 0) + 1;
@@ -106,7 +96,6 @@ export function drawTagChart(problems) {
     return totals;
   }, {});
 
-  // Turn the object into [tag, count] pairs, sort by count (biggest first), keep the top 10
   const topTags = Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
@@ -126,15 +115,14 @@ export function drawTagChart(problems) {
       ],
     },
     options: {
-      indexAxis: "y", // horizontal bars so long tag names stay readable
+      indexAxis: "y",
       maintainAspectRatio: false,
-      scales: { y: { ticks: { autoSkip: false } } }, // show all 10 tag names
+      scales: { y: { ticks: { autoSkip: false } } },
       plugins: { legend: { display: false } },
     },
   });
 }
 
-// Redraws both charts with the last data (used after the theme changes, so text colors update).
 export function redrawCharts() {
   if (lastHistory !== null) {
     drawRatingChart(lastHistory);
